@@ -15,6 +15,7 @@ import (
 type ClientConfig struct {
 	Service   string
 	Namespace string
+	Port      string
 }
 
 type Client struct {
@@ -28,7 +29,7 @@ func (c *Client) Reconcile(cluster *clusterv1.Cluster) error {
 	}
 	klog.Infoln("calling reconcile...")
 	klog.Infoln(string(b))
-	resp, err := http.Post(fmt.Sprintf("http://%s.%s/reconcile", c.Config.Service, c.Config.Namespace), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/reconcile", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
 		return errors.WithStack(err)
 	}

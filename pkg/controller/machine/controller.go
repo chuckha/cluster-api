@@ -49,7 +49,8 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		machineclient: &Client{
 			Config: &ClientConfig{
 				Service:   "cluster-api-provider-aws",
-				Namespace: "cluster-api-system",
+				Namespace: "aws-provider-system",
+				Port:      "8000",
 			},
 		},
 	}

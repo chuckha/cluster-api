@@ -16,6 +16,7 @@ import (
 type ClientConfig struct {
 	Service   string
 	Namespace string
+	Port      string
 }
 
 type Client struct {
@@ -39,7 +40,7 @@ func (c *Client) Delete(_ context.Context, cluster *clusterv1.Cluster, machine *
 	}
 	klog.Infoln("calling delete...")
 	klog.Infoln(string(b))
-	resp, err := http.Post(fmt.Sprintf("http://%s.%s/delete", c.Config.Service, c.Config.Namespace), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/delete", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -65,7 +66,7 @@ func (c *Client) Exists(_ context.Context, cluster *clusterv1.Cluster, machine *
 	}
 	klog.Infoln("calling exists...")
 	klog.Infoln(string(b))
-	resp, err := http.Post(fmt.Sprintf("http://%s.%s/exists", c.Config.Service, c.Config.Namespace), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/exists", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
 		return false, errors.WithStack(err)
 	}
@@ -91,7 +92,7 @@ func (c *Client) Update(_ context.Context, cluster *clusterv1.Cluster, machine *
 	}
 	klog.Infoln("calling updte...")
 	klog.Infoln(string(b))
-	resp, err := http.Post(fmt.Sprintf("http://%s.%s/update", c.Config.Service, c.Config.Namespace), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/update", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -117,7 +118,7 @@ func (c *Client) Create(_ context.Context, cluster *clusterv1.Cluster, machine *
 	}
 	klog.Infoln("calling create...")
 	klog.Infoln(string(b))
-	resp, err := http.Post(fmt.Sprintf("http://%s.%s/create", c.Config.Service, c.Config.Namespace), "application/json", bytes.NewReader(b))
+	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/create", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
 		return errors.WithStack(err)
 	}
