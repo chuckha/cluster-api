@@ -46,6 +46,12 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		Client:   mgr.GetClient(),
 		scheme:   mgr.GetScheme(),
 		nodeName: os.Getenv(NodeNameEnvVar),
+		machineclient: &Client{
+			Config: &ClientConfig{
+				Service:   "cluster-api-provider-aws",
+				Namespace: "cluster-api-system",
+			},
+		},
 	}
 
 	if r.nodeName == "" {

@@ -54,8 +54,7 @@ func TestReconcile(t *testing.T) {
 	}
 	c = mgr.GetClient()
 
-	a := newTestActuator()
-	recFn, requests := SetupTestReconcile(newReconciler(mgr, a))
+	recFn, requests := SetupTestReconcile(newReconciler(mgr))
 	if err := add(mgr, recFn); err != nil {
 		t.Fatalf("error adding controller to manager: %v", err)
 	}

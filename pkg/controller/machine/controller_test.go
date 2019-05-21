@@ -109,11 +109,13 @@ func TestReconcileRequest(t *testing.T) {
 		error           bool
 	}
 	testCases := []struct {
+		name        string
 		request     reconcile.Request
 		existsValue bool
 		expected    expected
 	}{
 		{
+			name:    "first",
 			request: reconcile.Request{NamespacedName: types.NamespacedName{Name: machine1.Name, Namespace: machine1.Namespace}},
 			expected: expected{
 				createCallCount: 1,
@@ -125,6 +127,7 @@ func TestReconcileRequest(t *testing.T) {
 			},
 		},
 		{
+			name:        "second",
 			request:     reconcile.Request{NamespacedName: types.NamespacedName{Name: machine2.Name, Namespace: machine2.Namespace}},
 			existsValue: true,
 			expected: expected{
@@ -137,6 +140,7 @@ func TestReconcileRequest(t *testing.T) {
 			},
 		},
 		{
+			name:        "third",
 			request:     reconcile.Request{NamespacedName: types.NamespacedName{Name: machine3.Name, Namespace: machine3.Namespace}},
 			existsValue: true,
 			expected: expected{
@@ -151,43 +155,27 @@ func TestReconcileRequest(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		act := newTestActuator()
-		act.ExistsValue = tc.existsValue
-		v1alpha1.AddToScheme(scheme.Scheme)
-		r := &ReconcileMachine{
-			Client:   fake.NewFakeClient(&clusterList, &machine1, &machine2, &machine3),
-			scheme:   scheme.Scheme,
-			actuator: act,
-		}
+		t.Run(tc.name, func(t *testing.T) {
 
-		result, err := r.Reconcile(tc.request)
-		gotError := (err != nil)
-		if tc.expected.error != gotError {
-			var errorExpectation string
-			if !tc.expected.error {
-				errorExpectation = "no"
+			v1alpha1.AddToScheme(scheme.Scheme)
+			r := &ReconcileMachine{
+				Client: fake.NewFakeClient(&clusterList, &machine1, &machine2, &machine3),
+				scheme: scheme.Scheme,
 			}
-			t.Errorf("Case: %s. Expected %s error, got: %v", tc.request.Name, errorExpectation, err)
-		}
 
-		if !reflect.DeepEqual(result, tc.expected.result) {
-			t.Errorf("Case %s. Got: %v, expected %v", tc.request.Name, result, tc.expected.result)
-		}
+			result, err := r.Reconcile(tc.request)
+			gotError := (err != nil)
+			if tc.expected.error != gotError {
+				var errorExpectation string
+				if !tc.expected.error {
+					errorExpectation = "no"
+				}
+				t.Errorf("Case: %s. Expected %s error, got: %v", tc.request.Name, errorExpectation, err)
+			}
 
-		if act.CreateCallCount != tc.expected.createCallCount {
-			t.Errorf("Case %s. Got: %d createCallCount, expected %d", tc.request.Name, act.CreateCallCount, tc.expected.createCallCount)
-		}
-
-		if act.UpdateCallCount != tc.expected.updateCallCount {
-			t.Errorf("Case %s. Got: %d updateCallCount, expected %d", tc.request.Name, act.UpdateCallCount, tc.expected.updateCallCount)
-		}
-
-		if act.ExistsCallCount != tc.expected.existCallCount {
-			t.Errorf("Case %s. Got: %d existCallCount, expected %d", tc.request.Name, act.ExistsCallCount, tc.expected.existCallCount)
-		}
-
-		if act.DeleteCallCount != tc.expected.deleteCallCount {
-			t.Errorf("Case %s. Got: %d deleteCallCount, expected %d", tc.request.Name, act.DeleteCallCount, tc.expected.deleteCallCount)
-		}
+			if !reflect.DeepEqual(result, tc.expected.result) {
+				t.Errorf("Case %s. Got: %v, expected %v", tc.request.Name, result, tc.expected.result)
+			}
+		})
 	}
 }

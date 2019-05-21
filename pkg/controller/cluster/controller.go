@@ -41,7 +41,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 		scheme: mgr.GetScheme(),
 		clusterclient: &Client{
 			Config: &ClientConfig{
-				Service:   "cluster-api-provider-aws-cluster",
+				Service:   "cluster-api-provider-aws",
 				Namespace: "cluster-api-system",
 			},
 		},
