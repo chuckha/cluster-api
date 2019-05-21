@@ -42,6 +42,7 @@ func (c *Client) Delete(_ context.Context, cluster *clusterv1.Cluster, machine *
 	klog.Infoln(string(b))
 	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/delete", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
+		klog.Error("error POSTING to delete", err)
 		return errors.WithStack(err)
 	}
 	klog.Infoln(resp)
@@ -55,6 +56,7 @@ func (c *Client) Delete(_ context.Context, cluster *clusterv1.Cluster, machine *
 }
 
 func (c *Client) Exists(_ context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) (bool, error) {
+	klog.Info("does this machine exist?", machine.Name)
 	cb, _ := json.Marshal(cluster)
 	mb, _ := json.Marshal(machine)
 	b, err := json.Marshal(&MachineRequest{
@@ -68,6 +70,7 @@ func (c *Client) Exists(_ context.Context, cluster *clusterv1.Cluster, machine *
 	klog.Infoln(string(b))
 	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/exists", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
+		klog.Error("error POSTING to exists", err)
 		return false, errors.WithStack(err)
 	}
 	klog.Infoln(resp)
@@ -94,6 +97,7 @@ func (c *Client) Update(_ context.Context, cluster *clusterv1.Cluster, machine *
 	klog.Infoln(string(b))
 	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/update", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
+		klog.Error("error POSTING to update", err)
 		return errors.WithStack(err)
 	}
 	klog.Infoln(resp)
@@ -107,6 +111,7 @@ func (c *Client) Update(_ context.Context, cluster *clusterv1.Cluster, machine *
 }
 
 func (c *Client) Create(_ context.Context, cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
+	klog.Info("Creating maching", machine.Name)
 	cb, _ := json.Marshal(cluster)
 	mb, _ := json.Marshal(machine)
 	b, err := json.Marshal(&MachineRequest{
@@ -120,6 +125,7 @@ func (c *Client) Create(_ context.Context, cluster *clusterv1.Cluster, machine *
 	klog.Infoln(string(b))
 	resp, err := http.Post(fmt.Sprintf("http://%s.%s:%s/create", c.Config.Service, c.Config.Namespace, c.Config.Port), "application/json", bytes.NewReader(b))
 	if err != nil {
+		klog.Error("error POSTING to create", err)
 		return errors.WithStack(err)
 	}
 	klog.Infoln(resp)
