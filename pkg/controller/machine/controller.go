@@ -40,19 +40,12 @@ const (
 	NodeNameEnvVar = "NODE_NAME"
 )
 
-var DefaultActuator Actuator
-
-func AddWithActuator(mgr manager.Manager, actuator Actuator) error {
-	return add(mgr, newReconciler(mgr, actuator))
-}
-
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler {
+func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	r := &ReconcileMachine{
 		Client:   mgr.GetClient(),
 		scheme:   mgr.GetScheme(),
 		nodeName: os.Getenv(NodeNameEnvVar),
-		actuator: actuator,
 	}
 
 	if r.nodeName == "" {
@@ -60,6 +53,10 @@ func newReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler 
 	}
 
 	return r
+}
+
+func Add(mgr manager.Manager) error {
+	return add(mgr, newReconciler(mgr))
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -80,9 +77,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 // ReconcileMachine reconciles a Machine object
 type ReconcileMachine struct {
 	client.Client
-	scheme *runtime.Scheme
-
-	actuator Actuator
+	scheme        *runtime.Scheme
+	machineclient *Client
 
 	// nodeName is the name of the node on which the machine controller is running, if not present, it is loaded from NODE_NAME.
 	nodeName string
@@ -168,7 +164,7 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (reconcile.Resul
 		}
 
 		klog.Infof("Reconciling machine %q triggers delete", name)
-		if err := r.actuator.Delete(ctx, cluster, m); err != nil {
+		if err := r.machineclient.Delete(ctx, cluster, m); err != nil {
 			if requeueErr, ok := err.(*controllerError.RequeueAfterError); ok {
 				klog.Infof("Actuator returned requeue-after error: %v", requeueErr)
 				return reconcile.Result{Requeue: true, RequeueAfter: requeueErr.RequeueAfter}, nil
@@ -197,7 +193,7 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, nil
 	}
 
-	exist, err := r.actuator.Exists(ctx, cluster, m)
+	exist, err := r.machineclient.Exists(ctx, cluster, m)
 	if err != nil {
 		klog.Errorf("Failed to check if machine %q exists: %v", name, err)
 		return reconcile.Result{}, err
@@ -205,7 +201,7 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	if exist {
 		klog.Infof("Reconciling machine %q triggers idempotent update", name)
-		if err := r.actuator.Update(ctx, cluster, m); err != nil {
+		if err := r.machineclient.Update(ctx, cluster, m); err != nil {
 			if requeueErr, ok := err.(*controllerError.RequeueAfterError); ok {
 				klog.Infof("Actuator returned requeue-after error: %v", requeueErr)
 				return reconcile.Result{Requeue: true, RequeueAfter: requeueErr.RequeueAfter}, nil
@@ -220,7 +216,7 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	// Machine resource created. Machine does not yet exist.
 	klog.Infof("Reconciling machine object %v triggers idempotent create.", m.ObjectMeta.Name)
-	if err := r.actuator.Create(ctx, cluster, m); err != nil {
+	if err := r.machineclient.Create(ctx, cluster, m); err != nil {
 		if requeueErr, ok := err.(*controllerError.RequeueAfterError); ok {
 			klog.Infof("Actuator returned requeue-after error: %v", requeueErr)
 			return reconcile.Result{Requeue: true, RequeueAfter: requeueErr.RequeueAfter}, nil

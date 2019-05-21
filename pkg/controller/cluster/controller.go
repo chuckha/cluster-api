@@ -34,15 +34,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var DefaultActuator Actuator
-
-func AddWithActuator(mgr manager.Manager, actuator Actuator) error {
-	return add(mgr, newReconciler(mgr, actuator))
-}
-
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler {
-	return &ReconcileCluster{Client: mgr.GetClient(), scheme: mgr.GetScheme(), actuator: actuator}
+func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+	return &ReconcileCluster{
+		Client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
+		clusterclient: &Client{
+			Config: &ClientConfig{
+				Service:   "cluster-api-provider-aws-cluster",
+				Namespace: "cluster-api-system",
+			},
+		},
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -62,13 +65,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
+func Add(mgr manager.Manager) error {
+	return add(mgr, newReconciler(mgr))
+}
+
 var _ reconcile.Reconciler = &ReconcileCluster{}
 
 // ReconcileCluster reconciles a Cluster object
 type ReconcileCluster struct {
 	client.Client
-	scheme   *runtime.Scheme
-	actuator Actuator
+	scheme        *runtime.Scheme
+	clusterclient *Client
 }
 
 // +kubebuilder:rbac:groups=cluster.k8s.io,resources=clusters,verbs=get;list;watch;create;update;patch;delete
@@ -110,7 +117,7 @@ func (r *ReconcileCluster) Reconcile(request reconcile.Request) (reconcile.Resul
 		}
 
 		klog.Infof("reconciling cluster object %v triggers delete.", name)
-		if err := r.actuator.Delete(cluster); err != nil {
+		if err := r.clusterclient.Delete(cluster); err != nil {
 			klog.Errorf("Error deleting cluster object %v; %v", name, err)
 			return reconcile.Result{}, err
 		}
@@ -125,8 +132,7 @@ func (r *ReconcileCluster) Reconcile(request reconcile.Request) (reconcile.Resul
 	}
 
 	klog.Infof("reconciling cluster object %v triggers idempotent reconcile.", name)
-	err = r.actuator.Reconcile(cluster)
-	if err != nil {
+	if err := r.clusterclient.Reconcile(cluster); err != nil {
 		if requeueErr, ok := err.(*controllerError.RequeueAfterError); ok {
 			klog.Infof("Actuator returned requeue after error: %v", requeueErr)
 			return reconcile.Result{Requeue: true, RequeueAfter: requeueErr.RequeueAfter}, nil
