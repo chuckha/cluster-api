@@ -116,19 +116,7 @@ func (r *ReconcileMachine) Reconcile(request reconcile.Request) (_ reconcile.Res
 	// Always issue a Patch for the Machine object and its status after each reconciliation.
 	// TODO(vincepri): Figure out if we should bubble up the errors from Patch to the controller.
 	defer func() {
-		gvk := m.GroupVersionKind()
-		if err := r.Client.Patch(ctx, m, patchMachine); err != nil {
-			klog.Errorf("Error Patching Machine %q in namespace %q: %v", m.Name, m.Namespace, err)
-			if reterr == nil {
-				reterr = err
-			}
-			return
-		}
-		// TODO(vincepri): This is a hack because after a Patch, the object loses TypeMeta information.
-		// Remove when https://github.com/kubernetes-sigs/controller-runtime/issues/526 is fixed.
-		m.SetGroupVersionKind(gvk)
-		if err := r.Client.Status().Patch(ctx, m, patchMachine); err != nil {
-			klog.Errorf("Error Patching Machine status %q in namespace %q: %v", m.Name, m.Namespace, err)
+		if err := r.patchMachine(ctx, m, patchMachine); err != nil {
 			if reterr == nil {
 				reterr = err
 			}
@@ -324,4 +312,17 @@ func (r *ReconcileMachine) isDeleteReady(ctx context.Context, m *v1alpha2.Machin
 
 func shouldAdopt(m *v1alpha2.Machine) bool {
 	return !util.HasOwner(m.OwnerReferences, v1alpha2.GroupVersion.String(), []string{"MachineSet", "Cluster"})
+}
+
+func (r *ReconcileMachine) patchMachine(ctx context.Context, machine *clusterv1.Machine, patch client.Patch) error {
+	// Always patch the status before the spec
+	if err := r.Client.Status().Patch(ctx, machine, patch); err != nil {
+		klog.Errorf("Error Patching Machine status %q in namespace %q: %v", machine.Name, machine.Namespace, err)
+		return err
+	}
+	if err := r.Client.Patch(ctx, machine, patch); err != nil {
+		klog.Errorf("Error Patching Machine %q in namespace %q: %v", machine.Name, machine.Namespace, err)
+		return err
+	}
+	return nil
 }
