@@ -1,4 +1,4 @@
-module sigs.k8s.io/cluster-api/hack/tools
+module github.com/chuckha/cluster-api/hack/tools
 
 go 1.12
 
