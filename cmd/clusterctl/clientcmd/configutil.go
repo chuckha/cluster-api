@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"sigs.k8s.io/cluster-api/util/restmapper"
+	"github.com/chuckha/cluster-api/util/restmapper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

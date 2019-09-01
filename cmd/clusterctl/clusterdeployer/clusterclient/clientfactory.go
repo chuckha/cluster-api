@@ -18,7 +18,7 @@ package clusterclient
 
 import (
 	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clientcmd"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clientcmd"
 )
 
 // Factory can create cluster clients.

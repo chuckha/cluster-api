@@ -22,9 +22,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/phases"
-	"sigs.k8s.io/cluster-api/util/yaml"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/phases"
+	"github.com/chuckha/cluster-api/util/yaml"
 )
 
 type AlphaPhaseApplyClusterOptions struct {

@@ -22,10 +22,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
-	"sigs.k8s.io/cluster-api/util/yaml"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
+	"github.com/chuckha/cluster-api/util/yaml"
 )
 
 type CreateOptions struct {

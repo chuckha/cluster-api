@@ -28,8 +28,8 @@ import (
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	errors "sigs.k8s.io/cluster-api/errors"
-	v1alpha1 "sigs.k8s.io/cluster-api/pkg/apis/deprecated/v1alpha1"
+	errors "github.com/chuckha/cluster-api/errors"
+	v1alpha1 "github.com/chuckha/cluster-api/pkg/apis/deprecated/v1alpha1"
 )
 
 func init() {
@@ -414,20 +414,20 @@ func Convert_v1alpha1_ClusterList_To_v1alpha2_ClusterList(in *v1alpha1.ClusterLi
 }
 
 func autoConvert_v1alpha2_ClusterSpec_To_v1alpha1_ClusterSpec(in *ClusterSpec, out *v1alpha1.ClusterSpec, s conversion.Scope) error {
-	// WARNING: in.ClusterNetwork requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api/api/v1alpha2.ClusterNetwork vs sigs.k8s.io/cluster-api/pkg/apis/deprecated/v1alpha1.ClusterNetworkingConfig)
+	// WARNING: in.ClusterNetwork requires manual conversion: inconvertible types (*github.com/chuckha/cluster-api/api/v1alpha2.ClusterNetwork vs github.com/chuckha/cluster-api/pkg/apis/deprecated/v1alpha1.ClusterNetworkingConfig)
 	// WARNING: in.InfrastructureRef requires manual conversion: does not exist in peer-type
 	return nil
 }
 
 func autoConvert_v1alpha1_ClusterSpec_To_v1alpha2_ClusterSpec(in *v1alpha1.ClusterSpec, out *ClusterSpec, s conversion.Scope) error {
-	// WARNING: in.ClusterNetwork requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api/pkg/apis/deprecated/v1alpha1.ClusterNetworkingConfig vs *sigs.k8s.io/cluster-api/api/v1alpha2.ClusterNetwork)
+	// WARNING: in.ClusterNetwork requires manual conversion: inconvertible types (github.com/chuckha/cluster-api/pkg/apis/deprecated/v1alpha1.ClusterNetworkingConfig vs *github.com/chuckha/cluster-api/api/v1alpha2.ClusterNetwork)
 	// WARNING: in.ProviderSpec requires manual conversion: does not exist in peer-type
 	return nil
 }
 
 func autoConvert_v1alpha2_ClusterStatus_To_v1alpha1_ClusterStatus(in *ClusterStatus, out *v1alpha1.ClusterStatus, s conversion.Scope) error {
 	out.APIEndpoints = *(*[]v1alpha1.APIEndpoint)(unsafe.Pointer(&in.APIEndpoints))
-	// WARNING: in.ErrorReason requires manual conversion: inconvertible types (*sigs.k8s.io/cluster-api/errors.ClusterStatusError vs sigs.k8s.io/cluster-api/errors.ClusterStatusError)
+	// WARNING: in.ErrorReason requires manual conversion: inconvertible types (*github.com/chuckha/cluster-api/errors.ClusterStatusError vs github.com/chuckha/cluster-api/errors.ClusterStatusError)
 	if err := v1.Convert_Pointer_string_To_string(&in.ErrorMessage, &out.ErrorMessage, s); err != nil {
 		return err
 	}
@@ -439,7 +439,7 @@ func autoConvert_v1alpha2_ClusterStatus_To_v1alpha1_ClusterStatus(in *ClusterSta
 
 func autoConvert_v1alpha1_ClusterStatus_To_v1alpha2_ClusterStatus(in *v1alpha1.ClusterStatus, out *ClusterStatus, s conversion.Scope) error {
 	out.APIEndpoints = *(*[]APIEndpoint)(unsafe.Pointer(&in.APIEndpoints))
-	// WARNING: in.ErrorReason requires manual conversion: inconvertible types (sigs.k8s.io/cluster-api/errors.ClusterStatusError vs *sigs.k8s.io/cluster-api/errors.ClusterStatusError)
+	// WARNING: in.ErrorReason requires manual conversion: inconvertible types (github.com/chuckha/cluster-api/errors.ClusterStatusError vs *github.com/chuckha/cluster-api/errors.ClusterStatusError)
 	if err := v1.Convert_string_To_Pointer_string(&in.ErrorMessage, &out.ErrorMessage, s); err != nil {
 		return err
 	}

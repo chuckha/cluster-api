@@ -18,9 +18,9 @@ package bootstrap
 
 import (
 	"github.com/pkg/errors"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap/existing"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap/kind"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap/minikube"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap/existing"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap/kind"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/bootstrap/minikube"
 )
 
 // Can provision a kubernetes cluster

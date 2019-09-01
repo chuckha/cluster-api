@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"k8s.io/klog"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
-	"sigs.k8s.io/cluster-api/util"
-	"sigs.k8s.io/cluster-api/util/secret"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
+	"github.com/chuckha/cluster-api/util"
+	"github.com/chuckha/cluster-api/util/secret"
 )
 
 const (

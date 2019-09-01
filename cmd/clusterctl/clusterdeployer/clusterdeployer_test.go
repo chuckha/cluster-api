@@ -28,11 +28,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/kubernetes"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/provider"
-	"sigs.k8s.io/cluster-api/util/secret"
-	"sigs.k8s.io/cluster-api/util/yaml"
+	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/provider"
+	"github.com/chuckha/cluster-api/util/secret"
+	"github.com/chuckha/cluster-api/util/yaml"
 )
 
 const (

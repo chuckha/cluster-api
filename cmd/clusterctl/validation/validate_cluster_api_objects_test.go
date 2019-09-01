@@ -28,8 +28,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
-	capierrors "sigs.k8s.io/cluster-api/errors"
+	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	capierrors "github.com/chuckha/cluster-api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )

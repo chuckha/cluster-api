@@ -24,7 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/klog"
-	"sigs.k8s.io/cluster-api/util"
+	"github.com/chuckha/cluster-api/util"
 )
 
 const (

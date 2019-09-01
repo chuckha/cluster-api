@@ -26,8 +26,8 @@ import (
 	fakeclient "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
-	"sigs.k8s.io/cluster-api/controllers/noderefutil"
+	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	"github.com/chuckha/cluster-api/controllers/noderefutil"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )

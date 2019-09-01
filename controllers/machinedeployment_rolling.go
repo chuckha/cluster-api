@@ -23,8 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 	"k8s.io/utils/integer"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
-	"sigs.k8s.io/cluster-api/controllers/mdutil"
+	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	"github.com/chuckha/cluster-api/controllers/mdutil"
 )
 
 // rolloutRolling implements the logic for rolling a new machine set.

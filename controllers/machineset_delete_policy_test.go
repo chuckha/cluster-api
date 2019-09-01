@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
-	capierrors "sigs.k8s.io/cluster-api/errors"
+	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	capierrors "github.com/chuckha/cluster-api/errors"
 )
 
 func TestMachineToDelete(t *testing.T) {

@@ -18,7 +18,7 @@ package phases
 
 import (
 	"k8s.io/klog"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
 )
 
 func ApplyAddons(client clusterclient.Client, addons string) error {

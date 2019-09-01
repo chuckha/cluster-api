@@ -20,7 +20,7 @@ import (
 	"errors"
 
 	conversion "k8s.io/apimachinery/pkg/conversion"
-	v1alpha1 "sigs.k8s.io/cluster-api/pkg/apis/deprecated/v1alpha1"
+	v1alpha1 "github.com/chuckha/cluster-api/pkg/apis/deprecated/v1alpha1"
 )
 
 //nolint

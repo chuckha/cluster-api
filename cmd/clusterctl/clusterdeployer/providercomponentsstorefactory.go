@@ -18,8 +18,8 @@ package clusterdeployer
 
 import (
 	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/provider"
-	"sigs.k8s.io/cluster-api/cmd/clusterctl/providercomponents"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/clusterdeployer/provider"
+	"github.com/chuckha/cluster-api/cmd/clusterctl/providercomponents"
 )
 
 type factory struct {
