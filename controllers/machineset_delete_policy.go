@@ -22,7 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 )
 
 type (

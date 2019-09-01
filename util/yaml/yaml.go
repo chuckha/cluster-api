@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 )
 
 func ExtractClusterReferences(out *ParseOutput, c *clusterv1.Cluster) (res []*unstructured.Unstructured) {

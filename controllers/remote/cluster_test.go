@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/util/secret"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )

@@ -37,7 +37,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // nolint
 	tcmd "k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/cmd/clusterctl/clientcmd"
 	"github.com/chuckha/cluster-api/util"
 	kcfg "github.com/chuckha/cluster-api/util/kubeconfig"

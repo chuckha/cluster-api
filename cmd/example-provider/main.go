@@ -22,7 +22,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/controllers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"

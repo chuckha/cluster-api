@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/controllers/noderefutil"
 	capierrors "github.com/chuckha/cluster-api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"

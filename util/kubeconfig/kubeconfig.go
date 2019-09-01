@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/util/certs"
 	"github.com/chuckha/cluster-api/util/secret"
 	"sigs.k8s.io/controller-runtime/pkg/client"

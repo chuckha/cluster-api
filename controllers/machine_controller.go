@@ -29,7 +29,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/controllers/external"
 	"github.com/chuckha/cluster-api/controllers/remote"
 	capierrors "github.com/chuckha/cluster-api/errors"

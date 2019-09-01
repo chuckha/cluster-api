@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/klog"
 	"k8s.io/utils/pointer"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	"github.com/chuckha/cluster-api/controllers/external"
 	capierrors "github.com/chuckha/cluster-api/errors"
 	"github.com/chuckha/cluster-api/util"

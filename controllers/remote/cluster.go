@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clusterv1 "github.com/chuckha/cluster-api/api/v1alpha2"
+	clusterv1 "github.com/chuckha/cluster-api/api/core/v1alpha2"
 	kcfg "github.com/chuckha/cluster-api/util/kubeconfig"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
