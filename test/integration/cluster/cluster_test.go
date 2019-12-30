@@ -66,21 +66,21 @@ var _ = Describe("Cluster-Controller", func() {
 		// Load configuration
 		kubeconfig := os.Getenv("KUBECONFIG")
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-		Expect(err).ShouldNot(HaveOccurred())
+		Expect(err).To(Succeed())
 
 		// Create kubernetes client
 		k8sClient, err = kubernetes.NewForConfig(config)
-		Expect(err).ShouldNot(HaveOccurred())
+		Expect(err).To(Succeed())
 
 		// Create namespace for test
 		ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{GenerateName: "clusterapi-test-"}}
 		ns, err = k8sClient.CoreV1().Namespaces().Create(ns)
-		Expect(err).ShouldNot(HaveOccurred())
+		Expect(err).To(Succeed())
 		testNamespace = ns.ObjectMeta.Name
 
 		// Create a new client
 		apiclient, err = client.New(config, client.Options{Scheme: scheme.Scheme})
-		Expect(err).ShouldNot(HaveOccurred())
+		Expect(err).To(Succeed())
 	})
 
 	AfterEach(func() {

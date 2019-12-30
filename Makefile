@@ -177,13 +177,13 @@ generate: ## Generate code
 	$(MAKE) generate-bindata
 
 .PHONY: generate-go
-generate-go: ## Runs Go related generate targets
+generate-go: $(CONTROLLER_GEN) $(CONVERSION_GEN) ## Runs Go related generate targets
 	$(MAKE) generate-go-core
 	$(MAKE) generate-go-kubeadm-bootstrap
 	$(MAKE) generate-go-kubeadm-control-plane
 
 .PHONY: generate-go-core
-generate-go-core: $(CONTROLLER_GEN) $(CONVERSION_GEN)
+generate-go-core:
 	$(CONTROLLER_GEN) \
 		object:headerFile=./hack/boilerplate/boilerplate.generatego.txt \
 		paths=./api/... \
@@ -222,7 +222,7 @@ generate-bindata: $(KUSTOMIZE) $(GOBINDATA) clean-bindata ## Generate code for e
 	$(MAKE) clean-bindata
 
 .PHONY: generate-manifests
-generate-manifests: ## Generate manifests e.g. CRD, RBAC etc.
+generate-manifests: $(CONTROLLER_GEN) ## Generate manifests e.g. CRD, RBAC etc.
 	$(MAKE) generate-core-manifests
 	$(MAKE) generate-kubeadm-bootstrap-manifests
 	$(MAKE) generate-kubeadm-control-plane-manifests

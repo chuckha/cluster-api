@@ -80,11 +80,22 @@ var _ = BeforeSuite(func() {
 	if capiImage == "" {
 		capiImage = "gcr.io/k8s-staging-cluster-api/cluster-api-controller:master"
 	}
+	capiKubeadmBootstrapImage := os.Getenv("CAPI_KUBEADM_BOOTSTRAP_IMAGE")
+	if capiKubeadmBootstrapImage == "" {
+		capiKubeadmBootstrapImage = "gcr.io/k8s-staging-cluster-api/kubeadm-bootstrap-controller:master"
+	}
+	capiKubeadmControlPlaneImage := os.Getenv("CAPI_KUBEADM_CONTROL_PLANE_IMAGE")
+	if capiKubeadmControlPlaneImage == "" {
+		capiKubeadmControlPlaneImage = "gcr.io/k8s-staging-cluster-api/kubeadm-control-plane-controller:master"
+	}
 	By("setting up in BeforeSuite")
 	var err error
 
 	// Set up the provider component generators based on master
 	core := &generators.ClusterAPI{GitRef: "master"}
+	bootstrap := &generators.KubeadmBootstrap{GitRef: "master"}
+	controlPlane := &generators.KubeadmControlPlane{GitRef: "master"}
+
 	// set up capd components based on current files
 	infra := &provider{}
 
@@ -104,7 +115,7 @@ var _ = BeforeSuite(func() {
 	if kindClusterName == "" {
 		kindClusterName = "docker-e2e-" + util.RandomString(6)
 	}
-	mgmt, err = NewClusterForCAPD(ctx, kindClusterName, scheme, managerImage, capiImage)
+	mgmt, err = NewClusterForCAPD(ctx, kindClusterName, scheme, managerImage, capiImage, capiKubeadmBootstrapImage, capiKubeadmControlPlaneImage)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(mgmt).NotTo(BeNil())
 
@@ -116,8 +127,10 @@ var _ = BeforeSuite(func() {
 	// TODO: consider finding a way to make this service name dynamic.
 	framework.WaitForAPIServiceAvailable(ctx, mgmt, "v1beta1.webhook.cert-manager.io")
 
-	framework.InstallComponents(ctx, mgmt, core, infra)
+	framework.InstallComponents(ctx, mgmt, core, bootstrap, controlPlane, infra)
 	framework.WaitForPodsReadyInNamespace(ctx, mgmt, "capi-system")
+	framework.WaitForPodsReadyInNamespace(ctx, mgmt, "capi-kubeadm-bootstrap-system")
+	framework.WaitForPodsReadyInNamespace(ctx, mgmt, "capi-kubeadm-control-plane-system")
 	framework.WaitForPodsReadyInNamespace(ctx, mgmt, "capd-system")
 	framework.WaitForPodsReadyInNamespace(ctx, mgmt, "cert-manager")
 	// TODO: maybe wait for controller components to be ready
@@ -127,7 +140,7 @@ var _ = AfterSuite(func() {
 	Expect(writeLogs(mgmt, "capi-system", "capi-controller-manager", logPath)).To(Succeed())
 	Expect(writeLogs(mgmt, "capd-system", "capd-controller-manager", logPath)).To(Succeed())
 	By("Deleting the management cluster")
-	Expect(mgmt.Teardown(ctx)).To(Succeed())
+	// Expect(mgmt.Teardown(ctx)).To(Succeed())
 })
 
 func ensureDockerArtifactsDeleted(input *framework.ControlplaneClusterInput) {

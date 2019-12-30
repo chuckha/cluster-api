@@ -28,7 +28,7 @@ import (
 )
 
 // Generator generates provider components for CAPI
-type ClusterAPI struct {
+type KubeadmControlPlane struct {
 	// GitRef defines the git ref. If set, the generator will use kustomize
 	GitRef string
 	// Version defines the release version. If GitRef is not set Version must be set and will not use kustomize
@@ -36,7 +36,7 @@ type ClusterAPI struct {
 }
 
 // GetName returns the name of the components being generated.
-func (g *ClusterAPI) GetName() string {
+func (g *KubeadmControlPlane) GetName() string {
 	version := g.Version
 	if version == "" {
 		version = g.GitRef
@@ -44,17 +44,17 @@ func (g *ClusterAPI) GetName() string {
 	return fmt.Sprintf("Cluster API version %s", version)
 }
 
-func (g *ClusterAPI) kustomizePath(path string) string {
+func (g *KubeadmControlPlane) kustomizePath(path string) string {
 	// TODO: this isn't right, but we need a way to use the local kustomize files
-	return "../../../../config/" + path
+	return "../../../../controlplane/kubeadm/config/" + path
 }
 
-func (g *ClusterAPI) releaseYAMLPath() string {
+func (g *KubeadmControlPlane) releaseYAMLPath() string {
 	return fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api/releases/download/%s/cluster-api-components.yaml", g.Version)
 }
 
 // Manifests return the generated components and any error if there is one.
-func (g *ClusterAPI) Manifests(ctx context.Context) ([]byte, error) {
+func (g *KubeadmControlPlane) Manifests(ctx context.Context) ([]byte, error) {
 	// TODO: this is not very nice
 	if g.GitRef != "" {
 		kustomize := exec.NewCommand(
