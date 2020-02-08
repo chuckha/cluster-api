@@ -254,7 +254,8 @@ func (r *MachineReconciler) reconcileDelete(ctx context.Context, cluster *cluste
 	if ok, err := r.reconcileDeleteExternal(ctx, m); !ok || err != nil {
 		// Return early and don't remove the finalizer if we got an error or
 		// the external reconciliation deletion isn't ready.
-		return ctrl.Result{}, err
+		// Force a requeue to remove the finalizer as quickly as possible since err can be nil here.
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	controllerutil.RemoveFinalizer(m, clusterv1.MachineFinalizer)
