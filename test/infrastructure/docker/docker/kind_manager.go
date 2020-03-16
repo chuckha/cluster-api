@@ -126,11 +126,11 @@ func createNode(name, image, clusterLabel, role string, mounts []v1alpha4.Mount,
 	}
 
 	// pass proxy environment variables to be used by node's docker daemon
-	proxyDetails, err := getProxyDetails()
-	if err != nil || proxyDetails == nil {
-		return nil, errors.Wrap(err, "proxy setup error")
+	proxyDetails := getProxyEnvs()
+	if proxyDetails == nil {
+		return nil, errors.New("proxy setup error")
 	}
-	for key, val := range proxyDetails.Envs {
+	for key, val := range proxyDetails {
 		runArgs = append(runArgs, "-e", fmt.Sprintf("%s=%s", key, val))
 	}
 
@@ -168,74 +168,41 @@ func getPort() (int32, error) {
 	return int32(port), nil
 }
 
-// proxyDetails contains proxy settings discovered on the host
-type proxyDetails struct {
-	Envs map[string]string
-}
-
 const (
-	// Docker default bridge network is named "bridge" (https://docs.docker.com/network/bridge/#use-the-default-bridge-network)
-	defaultNetwork = "bridge"
-	httpProxy      = "HTTP_PROXY"
-	httpsProxy     = "HTTPS_PROXY"
-	noProxy        = "NO_PROXY"
+	// HTTPProxy is the HTTP_PROXY environment variable key
+	HTTPProxy = "HTTP_PROXY"
+	// HTTPSProxy is the HTTPS_PROXY environment variable key
+	HTTPSProxy = "HTTPS_PROXY"
+	// NOProxy is the NO_PROXY environment variable key
+	NOProxy = "NO_PROXY"
 )
 
-// networkInspect displays detailed information on one or more networks
-func networkInspect(networkNames []string, format string) ([]string, error) {
-	cmd := exec.Command("docker", "network", "inspect",
-		"-f", format,
-		strings.Join(networkNames, " "),
-	)
-	return exec.CombinedOutputLines(cmd)
-}
-
-// getSubnets returns a slice of subnets for a specified network
-func getSubnets(networkName string) ([]string, error) {
-	format := `{{range (index (index . "IPAM") "Config")}}{{index . "Subnet"}} {{end}}`
-	lines, err := networkInspect([]string{networkName}, format)
-	if err != nil {
-		return nil, err
-	}
-	return strings.Split(strings.TrimSpace(lines[0]), " "), nil
-}
-
-// getProxyDetails returns a struct with the host environment proxy settings
-// that should be passed to the nodes
-func getProxyDetails() (*proxyDetails, error) {
-	var val string
-	details := proxyDetails{Envs: make(map[string]string)}
-	proxyEnvs := []string{httpProxy, httpsProxy, noProxy}
-	proxySupport := false
-
-	for _, name := range proxyEnvs {
-		val = os.Getenv(name)
-		if val != "" {
-			proxySupport = true
-			details.Envs[name] = val
-			details.Envs[strings.ToLower(name)] = val
-		} else {
+func getProxyEnvs() map[string]string {
+	podSubnet := "10.244.0.0/16"
+	serviceSubnet := "10.96.0.0/12"
+	envs := make(map[string]string)
+	for _, name := range []string{HTTPProxy, HTTPSProxy, NOProxy} {
+		val := os.Getenv(name)
+		if val == "" {
 			val = os.Getenv(strings.ToLower(name))
-			if val != "" {
-				proxySupport = true
-				details.Envs[name] = val
-				details.Envs[strings.ToLower(name)] = val
-			}
+		}
+		if val != "" {
+			envs[name] = val
+			envs[strings.ToLower(name)] = val
 		}
 	}
-
-	// Specifically add the docker network subnets to NO_PROXY if we are using proxies
-	if proxySupport {
-		subnets, err := getSubnets(defaultNetwork)
-		if err != nil {
-			return nil, err
+	// Specifically add the cluster subnets to NO_PROXY if we are using a proxy
+	if len(envs) > 0 {
+		noProxy := envs[NOProxy]
+		if noProxy != "" {
+			noProxy += ","
 		}
-		noProxyList := strings.Join(append(subnets, details.Envs[noProxy]), ",")
-		details.Envs[noProxy] = noProxyList
-		details.Envs[strings.ToLower(noProxy)] = noProxyList
+		//		noProxy += cfg.Networking.ServiceSubnet + "," + cfg.Networking.PodSubnet
+		noProxy += serviceSubnet + "," + podSubnet
+		envs[NOProxy] = noProxy
+		envs[strings.ToLower(NOProxy)] = noProxy
 	}
-
-	return &details, nil
+	return envs
 }
 
 // usernsRemap checks if userns-remap is enabled in dockerd
