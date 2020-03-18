@@ -328,8 +328,11 @@ func TestKubeadmControlPlaneReconciler_initializeControlPlane(t *testing.T) {
 		Log:      log.Log,
 		recorder: record.NewFakeRecorder(32),
 	}
-
-	result, err := r.initializeControlPlane(context.Background(), cluster, kcp)
+	controlPlane := &internal.ControlPlane{
+		KCP:     kcp,
+		Cluster: cluster,
+	}
+	result, err := r.initializeControlPlane(context.Background(), controlPlane)
 	g.Expect(result).To(Equal(ctrl.Result{Requeue: true}))
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -659,118 +662,6 @@ kubernetesVersion: metav1.16.1`,
 
 	machine := machineList.Items[0]
 	g.Expect(machine.Name).To(HavePrefix(kcp.Name))
-}
-
-func TestKubeadmControlPlaneReconciler_generateMachine(t *testing.T) {
-	g := NewWithT(t)
-	fakeClient := newFakeClient(g)
-
-	cluster := &clusterv1.Cluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testCluster",
-			Namespace: "test",
-		},
-	}
-
-	kcp := &controlplanev1.KubeadmControlPlane{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testControlPlane",
-			Namespace: cluster.Namespace,
-		},
-		Spec: controlplanev1.KubeadmControlPlaneSpec{
-			Version: "v1.16.6",
-		},
-	}
-
-	infraRef := &corev1.ObjectReference{
-		Kind:       "InfraKind",
-		APIVersion: "infrastructure.cluster.x-k8s.io/v1alpha3",
-		Name:       "infra",
-		Namespace:  cluster.Namespace,
-	}
-	bootstrapRef := &corev1.ObjectReference{
-		Kind:       "BootstrapKind",
-		APIVersion: "bootstrap.cluster.x-k8s.io/v1alpha3",
-		Name:       "bootstrap",
-		Namespace:  cluster.Namespace,
-	}
-	expectedMachineSpec := clusterv1.MachineSpec{
-		ClusterName: cluster.Name,
-		Version:     utilpointer.StringPtr(kcp.Spec.Version),
-		Bootstrap: clusterv1.Bootstrap{
-			ConfigRef: bootstrapRef.DeepCopy(),
-		},
-		InfrastructureRef: *infraRef.DeepCopy(),
-	}
-	r := &KubeadmControlPlaneReconciler{
-		Client:            fakeClient,
-		Log:               log.Log,
-		managementCluster: &internal.Management{Client: fakeClient},
-		recorder:          record.NewFakeRecorder(32),
-	}
-	g.Expect(r.generateMachine(context.Background(), kcp, cluster, infraRef, bootstrapRef, nil)).To(Succeed())
-
-	machineList := &clusterv1.MachineList{}
-	g.Expect(fakeClient.List(context.Background(), machineList, client.InNamespace(cluster.Namespace))).To(Succeed())
-	g.Expect(machineList.Items).NotTo(BeEmpty())
-	g.Expect(machineList.Items).To(HaveLen(1))
-	machine := machineList.Items[0]
-	g.Expect(machine.Name).To(HavePrefix(kcp.Name))
-	g.Expect(machine.Namespace).To(Equal(kcp.Namespace))
-	g.Expect(machine.Labels).To(Equal(internal.ControlPlaneLabelsForClusterWithHash(cluster.Name, hash.Compute(&kcp.Spec))))
-	g.Expect(machine.OwnerReferences).To(HaveLen(1))
-	g.Expect(machine.OwnerReferences).To(ContainElement(*metav1.NewControllerRef(kcp, controlplanev1.GroupVersion.WithKind("KubeadmControlPlane"))))
-	g.Expect(machine.Spec).To(Equal(expectedMachineSpec))
-}
-
-func TestKubeadmControlPlaneReconciler_generateKubeadmConfig(t *testing.T) {
-	g := NewWithT(t)
-	fakeClient := newFakeClient(g)
-
-	cluster := &clusterv1.Cluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testCluster",
-			Namespace: "test",
-		},
-	}
-
-	kcp := &controlplanev1.KubeadmControlPlane{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "testControlPlane",
-			Namespace: cluster.Namespace,
-		},
-	}
-
-	spec := bootstrapv1.KubeadmConfigSpec{}
-	expectedReferenceKind := "KubeadmConfig"
-	expectedReferenceAPIVersion := bootstrapv1.GroupVersion.String()
-	expectedOwner := metav1.OwnerReference{
-		Kind:       "KubeadmControlPlane",
-		APIVersion: controlplanev1.GroupVersion.String(),
-		Name:       kcp.Name,
-	}
-
-	r := &KubeadmControlPlaneReconciler{
-		Client:   fakeClient,
-		Log:      log.Log,
-		recorder: record.NewFakeRecorder(32),
-	}
-
-	got, err := r.generateKubeadmConfig(context.Background(), kcp, cluster, spec.DeepCopy())
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(got).NotTo(BeNil())
-	g.Expect(got.Name).To(HavePrefix(kcp.Name))
-	g.Expect(got.Namespace).To(Equal(kcp.Namespace))
-	g.Expect(got.Kind).To(Equal(expectedReferenceKind))
-	g.Expect(got.APIVersion).To(Equal(expectedReferenceAPIVersion))
-
-	bootstrapConfig := &bootstrapv1.KubeadmConfig{}
-	key := client.ObjectKey{Name: got.Name, Namespace: got.Namespace}
-	g.Expect(fakeClient.Get(context.Background(), key, bootstrapConfig)).To(Succeed())
-	g.Expect(bootstrapConfig.Labels).To(Equal(internal.ControlPlaneLabelsForClusterWithHash(cluster.Name, hash.Compute(&kcp.Spec))))
-	g.Expect(bootstrapConfig.OwnerReferences).To(HaveLen(1))
-	g.Expect(bootstrapConfig.OwnerReferences).To(ContainElement(expectedOwner))
-	g.Expect(bootstrapConfig.Spec).To(Equal(spec))
 }
 
 func TestKubeadmControlPlaneReconciler_updateStatusNoMachines(t *testing.T) {
@@ -1345,11 +1236,15 @@ func TestCloneConfigsAndGenerateMachine(t *testing.T) {
 		recorder: record.NewFakeRecorder(32),
 		scheme:   scheme.Scheme,
 	}
+	controlPlane := &internal.ControlPlane{
+		KCP:     kcp,
+		Cluster: cluster,
+	}
 
 	bootstrapSpec := &bootstrapv1.KubeadmConfigSpec{
 		JoinConfiguration: &kubeadmv1.JoinConfiguration{},
 	}
-	g.Expect(r.cloneConfigsAndGenerateMachine(context.Background(), cluster, kcp, bootstrapSpec, nil)).To(Succeed())
+	g.Expect(r.cloneConfigsAndGenerateMachine(context.Background(), controlPlane, bootstrapSpec, nil)).To(Succeed())
 
 	machineList := &clusterv1.MachineList{}
 	g.Expect(fakeClient.List(context.Background(), machineList, client.InNamespace(cluster.Namespace))).To(Succeed())
@@ -1578,8 +1473,12 @@ func TestKubeadmControlPlaneReconciler_scaleUpControlPlane(t *testing.T) {
 			Log:               log.Log,
 			recorder:          record.NewFakeRecorder(32),
 		}
-
-		result, err := r.scaleUpControlPlane(context.Background(), cluster, kcp, fmc.Machines.DeepCopy())
+		controlPlane := &internal.ControlPlane{
+			KCP:      kcp,
+			Cluster:  cluster,
+			Machines: fmc.Machines.DeepCopy(),
+		}
+		result, err := r.scaleUpControlPlane(context.Background(), controlPlane)
 		g.Expect(result).To(Equal(ctrl.Result{Requeue: true}))
 		g.Expect(err).ToNot(HaveOccurred())
 
@@ -1628,9 +1527,13 @@ func TestKubeadmControlPlaneReconciler_scaleUpControlPlane(t *testing.T) {
 				Log:               log.Log,
 				recorder:          record.NewFakeRecorder(32),
 			}
+			controlPlane := &internal.ControlPlane{
+				KCP:      kcp.DeepCopy(),
+				Cluster:  cluster.DeepCopy(),
+				Machines: fmc.Machines.DeepCopy(),
+			}
 
-			ownedMachines := fmc.Machines.DeepCopy()
-			_, err := r.scaleUpControlPlane(context.Background(), cluster.DeepCopy(), kcp.DeepCopy(), ownedMachines)
+			_, err := r.scaleUpControlPlane(context.Background(), controlPlane)
 			g.Expect(err).To(HaveOccurred())
 			g.Expect(err).To(MatchError(&capierrors.RequeueAfterError{RequeueAfter: HealthCheckFailedRequeueAfter}))
 
@@ -1664,8 +1567,12 @@ func TestKubeadmControlPlaneReconciler_scaleDownControlPlane_NoError(t *testing.
 			ControlPlaneHealthy: true,
 		},
 	}
-
-	_, err := r.scaleDownControlPlane(context.Background(), &clusterv1.Cluster{}, &controlplanev1.KubeadmControlPlane{}, machines, machines)
+	controlPlane := &internal.ControlPlane{
+		KCP:      &controlplanev1.KubeadmControlPlane{},
+		Cluster:  &clusterv1.Cluster{},
+		Machines: machines,
+	}
+	_, err := r.scaleDownControlPlane(context.Background(), controlPlane)
 	g.Expect(err).ToNot(HaveOccurred())
 }
 
@@ -2184,8 +2091,12 @@ func TestKubeadmControlPlaneReconciler_upgradeControlPlane(t *testing.T) {
 			Workload:   fakeWorkloadCluster{},
 		},
 	}
+	controlPlane := &internal.ControlPlane{
+		KCP:     kcp,
+		Cluster: cluster,
+	}
 
-	result, err := r.initializeControlPlane(context.Background(), cluster, kcp)
+	result, err := r.initializeControlPlane(context.Background(), controlPlane)
 	g.Expect(result).To(Equal(ctrl.Result{Requeue: true}))
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -2194,10 +2105,7 @@ func TestKubeadmControlPlaneReconciler_upgradeControlPlane(t *testing.T) {
 	g.Expect(machineList.Items).NotTo(BeEmpty())
 	g.Expect(machineList.Items).To(HaveLen(1))
 
-	machineCollection := internal.NewFilterableMachineCollection(&machineList.Items[0])
-	result, err = r.upgradeControlPlane(context.Background(), cluster, kcp, machineCollection, machineCollection)
-
-	g.Expect(machineList.Items[0].Annotations).To(HaveKey(controlplanev1.SelectedForUpgradeAnnotation))
+	result, err = r.upgradeControlPlane(context.Background(), controlPlane)
 
 	// TODO flesh out the rest of this test - this is currently least-effort to confirm a fix for an NPE when updating
 	// the etcd version
