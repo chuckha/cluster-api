@@ -238,21 +238,9 @@ func (r *KubeadmControlPlaneReconciler) reconcile(ctx context.Context, cluster *
 		return ctrl.Result{}, err
 	}
 
-	now := metav1.Now()
-	var requireUpgrade internal.FilterableMachineCollection
-	if kcp.Spec.UpgradeAfter != nil && kcp.Spec.UpgradeAfter.Before(&now) {
-		requireUpgrade = ownedMachines.AnyFilter(
-			machinefilters.Not(machinefilters.MatchesConfigurationHash(hash.Compute(&kcp.Spec))),
-			machinefilters.OlderThan(kcp.Spec.UpgradeAfter),
-		)
-	} else {
-		requireUpgrade = ownedMachines.Filter(
-			machinefilters.Not(machinefilters.MatchesConfigurationHash(hash.Compute(&kcp.Spec))),
-		)
-	}
+	controlPlane := internal.NewControlPlane(kcp, ownedMachines)
 
-	// Upgrade takes precedence over other operations
-	if len(requireUpgrade) > 0 {
+	if controlPlane.NeedsUpgrade() {
 		logger.Info("Upgrading Control Plane")
 		return r.upgradeControlPlane(ctx, cluster, kcp, ownedMachines, requireUpgrade)
 	}
