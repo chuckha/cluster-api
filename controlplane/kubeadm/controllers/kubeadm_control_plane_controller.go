@@ -439,10 +439,8 @@ func (r *KubeadmControlPlaneReconciler) scaleDownControlPlane(ctx context.Contex
 		return ctrl.Result{}, errors.New("failed to create client to workload cluster")
 	}
 
-	// We don't want to health check at the beginning of this method to avoid blocking re-entrancy
-
 	// Wait for any delete in progress to complete before deleting another Machine
-	if controlPlane.OwnedMachinesAreDeleting() {
+	if controlPlane.HasDeletingMachine() {
 		return ctrl.Result{}, &capierrors.RequeueAfterError{RequeueAfter: DeleteRequeueAfter}
 	}
 
@@ -456,11 +454,14 @@ func (r *KubeadmControlPlaneReconciler) scaleDownControlPlane(ctx context.Contex
 	}
 
 	// If etcd leadership is on machine that is about to be deleted, move it to the newest member available.
-	etcdLeaderCandidate := controlPlane.Machines.Newest()
-	if err := workloadCluster.ForwardEtcdLeadership(ctx, machineToDelete, etcdLeaderCandidate); err != nil {
-		logger.Error(err, "failed to move leadership to another machine")
-		return ctrl.Result{}, err
+	etcdLeaderCandidate := controlPlane.EtcdLeaderCandidate()
+	if etcdLeaderCandidate != nil {
+		if err := workloadCluster.ForwardEtcdLeadership(ctx, machineToDelete, etcdLeaderCandidate); err != nil {
+			logger.Error(err, "failed to move leadership to another machine")
+			return ctrl.Result{}, err
+		}
 	}
+
 	if err := workloadCluster.RemoveEtcdMemberForMachine(ctx, machineToDelete); err != nil {
 		logger.Error(err, "failed to remove etcd member for machine")
 		return ctrl.Result{}, err
