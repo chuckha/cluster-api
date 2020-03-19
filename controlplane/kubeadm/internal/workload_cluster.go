@@ -565,6 +565,7 @@ func (w *Workload) ForwardEtcdLeadership(ctx context.Context, machine *clusterv1
 	if nextLeader == nil {
 		return errors.Errorf("failed to get etcd member from node %q", leaderCandidate.Status.NodeRef.Name)
 	}
+
 	if err := etcdClient.MoveLeader(ctx, nextLeader.ID); err != nil {
 		return errors.Wrapf(err, "failed to move leader")
 	}

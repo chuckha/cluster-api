@@ -341,7 +341,7 @@ func (r *KubeadmControlPlaneReconciler) updateStatus(ctx context.Context, kcp *c
 	return nil
 }
 
-func (r *KubeadmControlPlaneReconciler) upgradeControlPlane(ctx context.Context, controlPlane *internal.ControlPlane) (ctrl.Result, error) {
+func (r *KubeadmControlPlaneReconciler) upgradeControlPlane(ctx context.Context, cluster *clusterv1.Cluster, controlPlane *internal.ControlPlane) (ctrl.Result, error) {
 	logger := controlPlane.Logger()
 
 	// TODO: handle reconciliation of etcd members and kubeadm config in case they get out of sync with cluster
@@ -382,9 +382,9 @@ func (r *KubeadmControlPlaneReconciler) upgradeControlPlane(ctx context.Context,
 	}
 
 	if controlPlane.NeedsReplacementNode() {
-		return r.scaleUpControlPlane(ctx, controlPlane)
+		return r.scaleUpControlPlane(ctx, cluster, controlPlane)
 	}
-	return r.scaleDownControlPlane(ctx, controlPlane)
+	return r.scaleDownControlPlane(ctx, cluster, controlPlane)
 }
 
 func (r *KubeadmControlPlaneReconciler) initializeControlPlane(ctx context.Context, controlPlane *internal.ControlPlane) (ctrl.Result, error) {
@@ -447,7 +447,7 @@ func (r *KubeadmControlPlaneReconciler) scaleDownControlPlane(ctx context.Contex
 	machineToDelete := controlPlane.Machines.Oldest()
 
 	// Ensure etcd is healthy prior to attempting to remove the member
-	if err := r.managementCluster.TargetClusterEtcdIsHealthy(ctx, controlPlane.KCP.Name); err != nil {
+	if err := r.managementCluster.TargetClusterEtcdIsHealthy(ctx, util.ObjectKey(cluster), controlPlane.KCP.Name); err != nil {
 		logger.Error(err, "waiting for control plane to pass etcd health check before removing a control plane machine")
 		r.recorder.Eventf(controlPlane.KCP, corev1.EventTypeWarning, "ControlPlaneUnhealthy", "Waiting for control plane to pass etcd health check before removing a control plane machine: %v", err)
 		return ctrl.Result{}, &capierrors.RequeueAfterError{RequeueAfter: HealthCheckFailedRequeueAfter}
@@ -467,7 +467,7 @@ func (r *KubeadmControlPlaneReconciler) scaleDownControlPlane(ctx context.Contex
 		return ctrl.Result{}, err
 	}
 
-	if err := r.managementCluster.TargetClusterControlPlaneIsHealthy(ctx, controlPlane.KCP.Name); err != nil {
+	if err := r.managementCluster.TargetClusterControlPlaneIsHealthy(ctx, util.ObjectKey(cluster), controlPlane.KCP.Name); err != nil {
 		logger.Error(err, "waiting for control plane to pass control plane health check before removing a control plane machine")
 		r.recorder.Eventf(controlPlane.KCP, corev1.EventTypeWarning, "ControlPlaneUnhealthy", "Waiting for control plane to pass control plane health check before removing a control plane machine: %v", err)
 		return ctrl.Result{}, &capierrors.RequeueAfterError{RequeueAfter: HealthCheckFailedRequeueAfter}

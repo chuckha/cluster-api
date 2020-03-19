@@ -82,7 +82,7 @@ func InFailureDomains(failureDomains ...*string) Func {
 	}
 }
 
-// OwnedControlPlaneMachines rerturns a filter to find all owned control plane machines.
+// OwnedControlPlaneMachines returns a filter to find all owned control plane machines.
 // Usage: managementCluster.GetMachinesForCluster(ctx, cluster, machinefilters.OwnedControlPlaneMachines(controlPlane.Name))
 func OwnedControlPlaneMachines(controlPlaneName string) Func {
 	return func(machine *clusterv1.Machine) bool {

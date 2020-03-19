@@ -21,6 +21,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1alpha3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -29,11 +30,11 @@ import (
 	"sigs.k8s.io/cluster-api/controlplane/kubeadm/internal/machinefilters"
 )
 
-func falseFilter(machine *clusterv1.Machine) bool {
+func falseFilter(_ *clusterv1.Machine) bool {
 	return false
 }
 
-func trueFilter(machine *clusterv1.Machine) bool {
+func trueFilter(_ *clusterv1.Machine) bool {
 	return true
 }
 
@@ -160,6 +161,12 @@ func TestHashAnnotationKey(t *testing.T) {
 		m := &clusterv1.Machine{}
 		g.Expect(machinefilters.HasAnnotationKey("foo")(m)).To(BeFalse())
 	})
+	t.Run("machine with only different annotations returns false", func(t *testing.T) {
+		g := NewWithT(t)
+		m := &clusterv1.Machine{}
+		m.SetAnnotations(map[string]string{"test": "blue"})
+		g.Expect(machinefilters.HasAnnotationKey("foo")(m)).To(BeFalse())
+	})
 }
 
 func TestInFailureDomain(t *testing.T) {
@@ -187,5 +194,55 @@ func TestInFailureDomain(t *testing.T) {
 		g := NewWithT(t)
 		m := &clusterv1.Machine{Spec: clusterv1.MachineSpec{FailureDomain: pointer.StringPtr("test")}}
 		g.Expect(machinefilters.InFailureDomains(pointer.StringPtr("foo"), pointer.StringPtr("test"))(m)).To(BeTrue())
+	})
+}
+
+func TestOwnedControlPlaneMachines(t *testing.T) {
+	controlPlane := &controlplanev1.KubeadmControlPlane{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-control-plane",
+		},
+	}
+	T := true
+	ownedMachine := &clusterv1.Machine{
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Kind:       "KubeadmControlPlane",
+					Name:       controlPlane.Name,
+					Controller: &T,
+				},
+			},
+		},
+	}
+	t.Run("Machine owned by the control plane passed in should return true", func(t *testing.T) {
+		g := NewWithT(t)
+		g.Expect(machinefilters.OwnedControlPlaneMachines(controlPlane.Name)(ownedMachine)).To(BeTrue())
+	})
+	t.Run("Machine owned by a different control plane passed in should return false", func(t *testing.T) {
+		g := NewWithT(t)
+		g.Expect(machinefilters.OwnedControlPlaneMachines("some-other-control-plane")(ownedMachine)).To(BeFalse())
+	})
+	t.Run("Machine owned by not a control plane in should return false", func(t *testing.T) {
+		g := NewWithT(t)
+		machine := ownedMachine.DeepCopy()
+		machine.OwnerReferences = []metav1.OwnerReference{
+			{
+				Kind:       "SomeKind",
+				Name:       "someName",
+				Controller: &T,
+			},
+		}
+		g.Expect(machinefilters.OwnedControlPlaneMachines("some-other-control-plane")(machine)).To(BeFalse())
+	})
+	t.Run("nil machine should return false", func(t *testing.T) {
+		g := NewWithT(t)
+		g.Expect(machinefilters.OwnedControlPlaneMachines(controlPlane.Name)(nil)).To(BeFalse())
+	})
+	t.Run("machine with a nil controller ref should return false", func(t *testing.T) {
+		g := NewWithT(t)
+		machine := ownedMachine.DeepCopy()
+		machine.OwnerReferences = []metav1.OwnerReference{}
+		g.Expect(machinefilters.OwnedControlPlaneMachines(controlPlane.Name)(machine)).To(BeFalse())
 	})
 }
