@@ -562,30 +562,6 @@ func (r *KubeadmControlPlaneReconciler) cleanupFromGeneration(ctx context.Contex
 	return kerrors.NewAggregate(errs)
 }
 
-func (r *KubeadmControlPlaneReconciler) failureDomainForScaleDown(cluster *clusterv1.Cluster, machines internal.FilterableMachineCollection) *string {
-	// See if there are any Machines that are not in currently defined failure domains first.
-	notInFailureDomains := machines.Filter(
-		machinefilters.Not(machinefilters.InFailureDomains(cluster.Status.FailureDomains.FilterControlPlane().GetIDs()...)),
-	)
-	if len(notInFailureDomains) > 0 {
-		// return the failure domain for the oldest Machine not in the current list of failure domains
-		// this could be either nil (no failure domain defined) or a failure domain that is no longer defined
-		// in the cluster status.
-		return notInFailureDomains.Oldest().Spec.FailureDomain
-	}
-
-	// Otherwise pick the currently known failure domain with the most Machines
-	return internal.PickMost(cluster.Status.FailureDomains.FilterControlPlane(), machines)
-}
-
-func (r *KubeadmControlPlaneReconciler) failureDomainForScaleUp(cluster *clusterv1.Cluster, machines internal.FilterableMachineCollection) *string {
-	// Don't do anything if there are no failure domains defined on the cluster.
-	if len(cluster.Status.FailureDomains.FilterControlPlane()) == 0 {
-		return nil
-	}
-	return internal.PickFewest(cluster.Status.FailureDomains.FilterControlPlane(), machines)
-}
-
 // reconcileDelete handles KubeadmControlPlane deletion.
 // The implementation does not take non-control plane workloads into
 // consideration. This may or may not change in the future. Please see
