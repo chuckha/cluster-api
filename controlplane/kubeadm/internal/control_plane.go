@@ -202,3 +202,16 @@ func (c *ControlPlane) NeedsReplacementNode() bool {
 func (c *ControlPlane) HasDeletingMachine() bool {
 	return len(c.Machines.Filter(machinefilters.HasDeletionTimestamp)) > 0
 }
+
+// EtcdLeaderCandidate will return the second oldest node as the etcd leader candidate.
+// The newest node is unsuitable as during upgrades it will not be ready yet.
+// Nil if there is one or zero nodes. Nothing can be done if there is only one machine.
+func (c *ControlPlane) EtcdLeaderCandidate() *clusterv1.Machine {
+	machines := c.Machines.SortedByCreationTimestamp()
+	switch len(machines) {
+	case 0, 1:
+		return nil
+	default:
+		return machines[1]
+	}
+}
