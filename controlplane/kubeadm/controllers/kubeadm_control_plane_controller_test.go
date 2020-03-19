@@ -1478,7 +1478,7 @@ func TestKubeadmControlPlaneReconciler_scaleUpControlPlane(t *testing.T) {
 			Cluster:  cluster,
 			Machines: fmc.Machines.DeepCopy(),
 		}
-		result, err := r.scaleUpControlPlane(context.Background(), controlPlane)
+		result, err := r.scaleUpControlPlane(context.Background(), cluster, controlPlane)
 		g.Expect(result).To(Equal(ctrl.Result{Requeue: true}))
 		g.Expect(err).ToNot(HaveOccurred())
 
@@ -1533,7 +1533,7 @@ func TestKubeadmControlPlaneReconciler_scaleUpControlPlane(t *testing.T) {
 				Machines: fmc.Machines.DeepCopy(),
 			}
 
-			_, err := r.scaleUpControlPlane(context.Background(), controlPlane)
+			_, err := r.scaleUpControlPlane(context.Background(), cluster, controlPlane)
 			g.Expect(err).To(HaveOccurred())
 			g.Expect(err).To(MatchError(&capierrors.RequeueAfterError{RequeueAfter: HealthCheckFailedRequeueAfter}))
 
@@ -1572,7 +1572,7 @@ func TestKubeadmControlPlaneReconciler_scaleDownControlPlane_NoError(t *testing.
 		Cluster:  &clusterv1.Cluster{},
 		Machines: machines,
 	}
-	_, err := r.scaleDownControlPlane(context.Background(), controlPlane)
+	_, err := r.scaleDownControlPlane(context.Background(), &clusterv1.Cluster{}, controlPlane)
 	g.Expect(err).ToNot(HaveOccurred())
 }
 
@@ -2105,7 +2105,7 @@ func TestKubeadmControlPlaneReconciler_upgradeControlPlane(t *testing.T) {
 	g.Expect(machineList.Items).NotTo(BeEmpty())
 	g.Expect(machineList.Items).To(HaveLen(1))
 
-	result, err = r.upgradeControlPlane(context.Background(), controlPlane)
+	result, err = r.upgradeControlPlane(context.Background(), cluster, controlPlane)
 
 	// TODO flesh out the rest of this test - this is currently least-effort to confirm a fix for an NPE when updating
 	// the etcd version

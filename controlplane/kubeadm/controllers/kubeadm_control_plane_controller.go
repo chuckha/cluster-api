@@ -242,7 +242,7 @@ func (r *KubeadmControlPlaneReconciler) reconcile(ctx context.Context, cluster *
 
 	if len(controlPlane.MachinesNeedingUpgrade()) > 0 {
 		logger.Info("Upgrading Control Plane")
-		return r.upgradeControlPlane(ctx, controlPlane)
+		return r.upgradeControlPlane(ctx, cluster, controlPlane)
 	}
 
 	// If we've made it this far, we can assume that all ownedMachines are up to date
@@ -259,11 +259,11 @@ func (r *KubeadmControlPlaneReconciler) reconcile(ctx context.Context, cluster *
 	case numMachines < desiredReplicas && numMachines > 0:
 		// Create a new Machine w/ join
 		logger.Info("Scaling up control plane", "Desired", desiredReplicas, "Existing", numMachines)
-		return r.scaleUpControlPlane(ctx, controlPlane)
+		return r.scaleUpControlPlane(ctx, cluster, controlPlane)
 	// We are scaling down
 	case numMachines > desiredReplicas:
 		logger.Info("Scaling down control plane", "Desired", desiredReplicas, "Existing", numMachines)
-		return r.scaleDownControlPlane(ctx, controlPlane)
+		return r.scaleDownControlPlane(ctx, cluster, controlPlane)
 	}
 
 	// Get the workload cluster client.
