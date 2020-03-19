@@ -19,10 +19,13 @@ package internal
 import (
 	"sort"
 
+	"k8s.io/klog/klogr"
 	"k8s.io/utils/pointer"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
 )
+
+var Log = klogr.New()
 
 type failureDomainAggregation struct {
 	id    string

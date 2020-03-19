@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/cluster-api/controlplane/kubeadm/internal/utils"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -502,7 +501,7 @@ func (r *KubeadmControlPlaneReconciler) cloneConfigsAndGenerateMachine(ctx conte
 	}
 
 	// clone a new template
-	infraTemplate, err := utils.CloneTemplate(&utils.CloneTemplateInput{
+	infraTemplate, err := external.GenerateTemplate(&external.GenerateTemplateInput{
 		Template:    template,
 		ClusterName: controlPlane.Cluster.Name,
 		OwnerRef:    controlPlane.AsOwnerReference(),
@@ -514,7 +513,7 @@ func (r *KubeadmControlPlaneReconciler) cloneConfigsAndGenerateMachine(ctx conte
 
 	config := controlPlane.GenerateKubeadmConfig(bootstrapSpec)
 	bootstrapRef := bootstrapRef(config)
-	infraRef := utils.GetObjectReference(infraTemplate)
+	infraRef := external.GetObjectReference(infraTemplate)
 	machine := controlPlane.NewMachine(infraRef, bootstrapRef, failureDomain)
 
 	var errs []error
